@@ -24,13 +24,11 @@ public class MoviesServer {
     }
 
     public void start() {
-        // запустите сервер
         server.start();
         System.out.println("Сервер запущен");
     }
 
     public void stop() {
-        // остановите сервер
         server.stop(STOP_DELAY_IMMEDIATE);
         System.out.println("Сервер остановлен");
     }

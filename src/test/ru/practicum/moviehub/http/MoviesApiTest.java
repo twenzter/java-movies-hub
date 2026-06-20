@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class MoviesApiTest {
-    private static final String BASE = "http://localhost:8080"; // !!! добавьте базовую часть URL
+    private static final String BASE = "http://localhost:8080";
     private static MoviesServer server;
     private static HttpClient client;
     private static final Gson gson = new Gson();
@@ -42,7 +42,6 @@ public class MoviesApiTest {
 
     @BeforeAll
     static void beforeAll() {
-        // !!! Реализуйте метод beforeAll
         server = new MoviesServer(new MoviesStore(), PORT);
         client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(MAX_TIMEOUT_DURATION))
@@ -57,14 +56,13 @@ public class MoviesApiTest {
 
     @AfterAll
     static void afterAll() {
-        // !!! Реализуйте метод afterAll
         server.stop();
     }
 
     @Test
     void getMovies_whenEmpty_returnsEmptyArray() throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + MOVIES_PATH)) // !!! Добавьте правильный URI
+                .uri(URI.create(BASE + MOVIES_PATH))
                 .GET()
                 .build();
 
@@ -88,7 +86,7 @@ public class MoviesApiTest {
     void postMovie_returnsCreatedJson() throws Exception {
         String json = gson.toJson(new Movie(1, "the matrix", 1999));
 
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
@@ -113,7 +111,7 @@ public class MoviesApiTest {
         String json = gson.toJson(new Movie(1, "The matrix", 1999));
 
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + MOVIES_PATH))// !!! Добавьте правильный URI
+                .uri(URI.create(BASE + MOVIES_PATH))
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
@@ -137,7 +135,7 @@ public class MoviesApiTest {
     @Test
     void postMovie_returnsError422_withWrongYear_NegativeId_EmptyTitle() throws Exception {
         String json = gson.toJson(new Movie(-1, "", 1000));
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
@@ -154,16 +152,16 @@ public class MoviesApiTest {
 
         String body = resp.body().trim();
         assertTrue(body.startsWith("{\"error\":\"Ошибка валидации\",")
-                        && body.endsWith("[\"год должен быть между 1888 и 2026\"," +
-                        "\"id не может быть отрицательным\"," +
-                        "\"название не может быть пустым\"]}"),
+                        && body.endsWith("[\"id не может быть отрицательным\"," +
+                        "\"название не может быть пустым\"," +
+                        "\"год должен быть между 1888 и 2026\"]}"),
                 "Ожидается объект JSON с описанием ошибки");
     }
 
     @Test
     void postMovie_returnsError422_withLongTitle() throws Exception {
         String json = gson.toJson(new Movie(1, "1".repeat(101), 1999));
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
@@ -187,14 +185,14 @@ public class MoviesApiTest {
     @Test
     void postMovie_returnsError422_withNotUniqueId() throws Exception {
         String json = gson.toJson(new Movie(1, "The matrix", 1999));
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
         String json2 = gson.toJson(new Movie(1, "Fight Club", 1999));
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json2))
                 .build();
 
@@ -219,13 +217,13 @@ public class MoviesApiTest {
     void getMovieById_returnsJson() throws Exception {
         String json = gson.toJson(new Movie(1, "the matrix", 1999));
 
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/1")// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/1")
                 .GET()
                 .build();
 
@@ -249,13 +247,13 @@ public class MoviesApiTest {
     void getMovieById_returnsError404_NotFoundMovie() throws Exception {
         String json = gson.toJson(new Movie(1, "the matrix", 1999));
 
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/2")// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/2")
                 .GET()
                 .build();
 
@@ -279,13 +277,13 @@ public class MoviesApiTest {
     void getMovieById_returnsError400_BadRequest() throws Exception {
         String json = gson.toJson(new Movie(1, "the matrix", 1999));
 
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/2abc")// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/2abc")
                 .GET()
                 .build();
 
@@ -309,13 +307,13 @@ public class MoviesApiTest {
     void deleteMovieById_returnsNoContent() throws Exception {
         String json = gson.toJson(new Movie(1, "the matrix", 1999));
 
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/1")// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/1")
                 .DELETE()
                 .build();
 
@@ -335,13 +333,13 @@ public class MoviesApiTest {
     void deleteMovieById_returnsError404_NotFound() throws Exception {
         String json = gson.toJson(new Movie(1, "the matrix", 1999));
 
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/2")// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/2")
                 .DELETE()
                 .build();
 
@@ -365,13 +363,13 @@ public class MoviesApiTest {
     void deleteMovieById_returnsError400_BadRequest() throws Exception {
         String json = gson.toJson(new Movie(1, "the matrix", 1999));
 
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/2abc")// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH + "/2abc")
                 .DELETE()
                 .build();
 
@@ -395,20 +393,20 @@ public class MoviesApiTest {
     @Test
     void getMovieSortedByYear_returnsArray() throws Exception {
         String json = gson.toJson(new Movie(1, "The matrix", 1999));
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
         String json2 = gson.toJson(new Movie(2, "1+1", 2011));
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json2))
                 .build();
 
         client.send(req2, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req3 = createJsonBuilder(MOVIES_PATH + "?year=1999")// !!! Добавьте правильный URI
+        HttpRequest req3 = createJsonBuilder(MOVIES_PATH + "?year=1999")
                 .GET()
                 .build();
 
@@ -430,20 +428,20 @@ public class MoviesApiTest {
     @Test
     void getMovieSortedByYear_returnsEmptyArray() throws Exception {
         String json = gson.toJson(new Movie(1, "The matrix", 1999));
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
         String json2 = gson.toJson(new Movie(2, "1+1", 2011));
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json2))
                 .build();
 
         client.send(req2, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req3 = createJsonBuilder(MOVIES_PATH + "?year=2000")// !!! Добавьте правильный URI
+        HttpRequest req3 = createJsonBuilder(MOVIES_PATH + "?year=2000")
                 .GET()
                 .build();
 
@@ -466,20 +464,20 @@ public class MoviesApiTest {
     @Test
     void getMovieSortedByYear_returnsError400_NotCorrectYear() throws Exception {
         String json = gson.toJson(new Movie(1, "The matrix", 1999));
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
         String json2 = gson.toJson(new Movie(2, "1+1", 2011));
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json2))
                 .build();
 
         client.send(req2, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req3 = createJsonBuilder(MOVIES_PATH + "?year=1000")// !!! Добавьте правильный URI
+        HttpRequest req3 = createJsonBuilder(MOVIES_PATH + "?year=1000")
                 .GET()
                 .build();
 
@@ -503,20 +501,20 @@ public class MoviesApiTest {
     @Test
     void getMovieSortedByYear_returnsError400_YearUnknownFormat() throws Exception {
         String json = gson.toJson(new Movie(1, "The matrix", 1999));
-        HttpRequest req = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
         client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
         String json2 = gson.toJson(new Movie(2, "1+1", 2011));
-        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)// !!! Добавьте правильный URI
+        HttpRequest req2 = createJsonBuilder(MOVIES_PATH)
                 .POST(HttpRequest.BodyPublishers.ofString(json2))
                 .build();
 
         client.send(req2, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        HttpRequest req3 = createJsonBuilder(MOVIES_PATH + "?year=abcd")// !!! Добавьте правильный URI
+        HttpRequest req3 = createJsonBuilder(MOVIES_PATH + "?year=abcd")
                 .GET()
                 .build();
 
@@ -540,7 +538,7 @@ public class MoviesApiTest {
     void putMovies_returnsNotAllowedMethod() throws Exception {
         String json = gson.toJson(new Movie(1, "1+1", 2011));
         HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(BASE + MOVIES_PATH)) // !!! Добавьте правильный URI
+                .uri(URI.create(BASE + MOVIES_PATH))
                 .PUT(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 

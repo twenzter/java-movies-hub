@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-class MoviesHandler extends BaseHttpHandler { // Расширьте базовый класс BaseHttpHandler
+class MoviesHandler extends BaseHttpHandler {
     private final MoviesStore moviesStore;
     private static final String CT_REQUEST_JSON = "application/json";
     private static final int MOVIE_COMPONENTS = 2;
@@ -44,8 +44,7 @@ class MoviesHandler extends BaseHttpHandler { // Расширьте базовы
         } else if (method.equalsIgnoreCase("DELETE") && amountComponents == MOVIE_ID_COMPONENTS) {
             deleteMovieById(ex);
         } else {
-            ErrorResponse errorResponse = new ErrorResponse("неподдерживаемый HTTP-метод");
-            sendJson(ex, METHOD_NOT_ALLOWED, gson.toJson(errorResponse));
+            sendError(ex, METHOD_NOT_ALLOWED, "неподдерживаемый HTTP-метод");
         }
     }
 
@@ -65,18 +64,16 @@ class MoviesHandler extends BaseHttpHandler { // Расширьте базовы
             String stringYear = query.split("year=")[INDEX_OF_QUERY_KEY].split("&")[INDEX_OF_QUERY_VALUE];
             int year = Integer.parseInt(stringYear);
             if (!(year > FIRST_MOVIE_YEAR && year <= LAST_MOVIE_YEAR)) {
-                ErrorResponse errorResponse = new ErrorResponse("Некорректный параметр запроса — year",
+                sendError(ex, BAD_REQUEST, "Некорректный параметр запроса — year",
                         List.of("год должен быть от " + FIRST_MOVIE_YEAR + " до " + LAST_MOVIE_YEAR));
-                sendJson(ex, BAD_REQUEST, gson.toJson(errorResponse));
             }
             List<Movie> sortedMoviesByYear = moviesStore.getMovies().stream()
                     .filter(mov -> mov.getYear() == year)
                     .toList();
             sendJson(ex, OK, gson.toJson(sortedMoviesByYear));
         } catch (NumberFormatException e) {
-            ErrorResponse errorResponse = new ErrorResponse("Некорректный параметр запроса — year",
+            sendError(ex, BAD_REQUEST, "Некорректный параметр запроса — year",
                     List.of("при запросе должны использоваться только цифры"));
-            sendJson(ex, BAD_REQUEST, gson.toJson(errorResponse));
         }
     }
 
@@ -84,39 +81,31 @@ class MoviesHandler extends BaseHttpHandler { // Расширьте базовы
 
         String headerContentType = ex.getRequestHeaders().getFirst("Content-Type");
         if (headerContentType == null || !headerContentType.equals(CT_REQUEST_JSON)) {
-            ErrorResponse errorResponse = new ErrorResponse("Запрос с неправильным значением заголовка",
+            sendError(ex, UNSUPPORTED_MEDIA_TYPE, "Запрос с неправильным значением заголовка",
                     List.of("Content-Type должен быть равен " + CT_REQUEST_JSON));
-            sendJson(ex, UNSUPPORTED_MEDIA_TYPE, gson.toJson(errorResponse));
             return;
         }
 
         try (InputStream is = ex.getRequestBody()) {
-
             Movie movie = gson.fromJson(new String(is.readAllBytes(), StandardCharsets.UTF_8), Movie.class);
-            List<String> details = new ArrayList<>();
-            getDetails(movie, details);
+            List<String> details = getDetails(movie);
 
-            if (!details.isEmpty()) {
-                ErrorResponse errorResponse = new ErrorResponse("Ошибка валидации", details);
-                sendJson(ex, UNPROCESSABLE_ENTITY, gson.toJson(errorResponse));
+            if (details.isEmpty()) {
+                moviesStore.addNewMovie(movie);
+                sendJson(ex, CREATED, gson.toJson(moviesStore.getMovies().getLast()));
                 return;
             }
-
-            moviesStore.addNewMovie(movie);
-            sendJson(ex, CREATED, gson.toJson(moviesStore.getMovies().getLast()));
+            sendError(ex, UNPROCESSABLE_ENTITY, "Ошибка валидации", details);
         } catch (Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse("Некорректный JSON");
-            sendJson(ex, BAD_REQUEST, gson.toJson(errorResponse));
+            sendError(ex, BAD_REQUEST, "Некорректный JSON");
         }
     }
 
-    private void getDetails(Movie movie, List<String> details) {
+    private List<String> getDetails(Movie movie) {
+        List<String> details = new ArrayList<>();
         boolean isCorrectId = moviesStore.getMovies().stream()
                 .noneMatch(mov -> mov.getId() == movie.getId());
 
-        if (!(movie.getYear() >= FIRST_MOVIE_YEAR && movie.getYear() <= LAST_MOVIE_YEAR)) {
-            details.add("год должен быть между " + FIRST_MOVIE_YEAR + " и " + LAST_MOVIE_YEAR);
-        }
         if (!isCorrectId) {
             details.add("id должен быть уникальным");
         }
@@ -129,6 +118,10 @@ class MoviesHandler extends BaseHttpHandler { // Расширьте базовы
         if (movie.getTitle().length() > MAX_TITLE_LENGTH) {
             details.add("название очень длинное");
         }
+        if (!(movie.getYear() >= FIRST_MOVIE_YEAR && movie.getYear() <= LAST_MOVIE_YEAR)) {
+            details.add("год должен быть между " + FIRST_MOVIE_YEAR + " и " + LAST_MOVIE_YEAR);
+        }
+        return details;
     }
 
 
@@ -143,11 +136,9 @@ class MoviesHandler extends BaseHttpHandler { // Расширьте базовы
                 sendJson(ex, OK, gson.toJson(movieOpt.get()));
                 return;
             }
-            ErrorResponse errorResponse = new ErrorResponse("Фильм не найден");
-            sendJson(ex, NOT_FOUND, gson.toJson(errorResponse));
+            sendError(ex, NOT_FOUND, "Фильм не найден");
         } catch (NumberFormatException e) {
-            ErrorResponse errorResponse = new ErrorResponse("Некорректный ID");
-            sendJson(ex, BAD_REQUEST, gson.toJson(errorResponse));
+            sendError(ex, BAD_REQUEST, "Некорректный ID");
         }
     }
 
@@ -164,11 +155,9 @@ class MoviesHandler extends BaseHttpHandler { // Расширьте базовы
                 sendNoContent(ex);
                 return;
             }
-            ErrorResponse errorResponse = new ErrorResponse("Фильм не найден");
-            sendJson(ex, NOT_FOUND, gson.toJson(errorResponse));
+            sendError(ex, NOT_FOUND, "Фильм не найден");
         } catch (NumberFormatException e) {
-            ErrorResponse errorResponse = new ErrorResponse("Некорректный ID");
-            sendJson(ex, BAD_REQUEST, gson.toJson(errorResponse));
+            sendError(ex, BAD_REQUEST, "Некорректный ID");
         }
     }
 }

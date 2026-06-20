@@ -3,10 +3,12 @@ package ru.practicum.moviehub.http;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import ru.practicum.moviehub.api.ErrorResponse;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.io.OutputStream;
+import java.util.List;
 
 abstract class BaseHttpHandler implements HttpHandler {
     protected static final String CT_JSON = "application/json; charset=UTF-8";
@@ -30,12 +32,26 @@ abstract class BaseHttpHandler implements HttpHandler {
         try (OutputStream os = ex.getResponseBody()) {
             os.write(bytes);
         }
-
     }
 
     protected void sendNoContent(HttpExchange ex) throws IOException {
         ex.getResponseHeaders().set("Content-Type", CT_JSON);
         ex.sendResponseHeaders(NO_CONTENT, NO_CONTENT_LENGTH);
+    }
+
+    protected void sendError(HttpExchange ex, int request, String message) throws IOException {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .error(message)
+                .build();
+        sendJson(ex, request, gson.toJson(errorResponse));
+    }
+
+    protected void sendError(HttpExchange ex, int request, String err, List<String> det) throws IOException {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .error(err)
+                .details(det)
+                .build();
+        sendJson(ex, request, gson.toJson(errorResponse));
     }
 }
 
