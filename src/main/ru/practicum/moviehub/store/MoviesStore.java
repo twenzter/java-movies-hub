@@ -2,7 +2,6 @@ package ru.practicum.moviehub.store;
 
 import ru.practicum.moviehub.model.Movie;
 
-import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 
