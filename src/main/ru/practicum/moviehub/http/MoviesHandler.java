@@ -97,7 +97,7 @@ class MoviesHandler extends BaseHttpHandler { // Расширьте базовы
             getDetails(movie, details);
 
             if (!details.isEmpty()) {
-                ErrorResponse errorResponse = new ErrorResponse("Ошибка валидации",details);
+                ErrorResponse errorResponse = new ErrorResponse("Ошибка валидации", details);
                 sendJson(ex, UNPROCESSABLE_ENTITY, gson.toJson(errorResponse));
                 return;
             }
