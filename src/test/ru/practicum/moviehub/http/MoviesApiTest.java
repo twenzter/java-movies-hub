@@ -34,7 +34,7 @@ public class MoviesApiTest {
     private static final int PORT = 8080;
     private static final int MAX_TIMEOUT_DURATION = 2;
 
-    private HttpRequest.Builder createJsonBuilder (String path) {
+    private HttpRequest.Builder createJsonBuilder(String path) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(BASE + path))
                 .headers(CONTENT_TYPE, APPLICATION_JSON);
@@ -47,7 +47,6 @@ public class MoviesApiTest {
         client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(MAX_TIMEOUT_DURATION))
                 .build();
-
         server.start();
     }
 
@@ -207,8 +206,8 @@ public class MoviesApiTest {
 
         String contentTypeHeaderValue =
                 resp2.headers().firstValue(CONTENT_TYPE).orElse("");
-        assertEquals(JSON_TYPE, contentTypeHeaderValue,CONTENT_TYPE+
-                " должен содержать формат данных и кодировку");
+        assertEquals(JSON_TYPE, contentTypeHeaderValue,CONTENT_TYPE
+                + " должен содержать формат данных и кодировку");
 
         String body = resp2.body().trim();
         assertTrue(body.startsWith("{\"error\":\"Ошибка валидации\",")
